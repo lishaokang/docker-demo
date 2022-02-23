@@ -1,0 +1,83 @@
+## Flyway使用规则
+
+​	Prefix 可配置，前缀标识，默认值 V 表示 Versioned, R 表示 Repeatable, U 表示 Undo
+​	Version 标识版本号, 由一个或多个数字构成, 数字之间的分隔符可用点 . 或下划线 _
+​	Separator 可配置, 用于分隔版本标识与描述信息, 默认为两个下划线 __
+​	Description 描述信息, 文字之间可以用下划线 _ 或空格 分隔
+​	Suffix 可配置, 后续标识, 默认为 .sql
+​	
+
+存放问题？
+
+​	单独放到一个项目中管理？
+
+​	各自放到自身微服务中？
+
+​	命名规范中要不要加上项目名称？
+
+1.SQL存放位置及命名规则
+??ProjectName要不要在命名中展示？？
+ Java Spring boot项目需要在项目src/main/resources/下创建db/migration目录
+ V{version}_{date}_{num}__{description}_{Author}.sql
+ 仅需要被执行一次的SQL命名以大写的"V"开头，后面跟上"0~9"数字的组合,数字之间可以用“.”或者下划线"_"分割开，然后再以两个下划线分割，其后跟文件名称，最后以.sql结尾
+ 举例：
+	V2.1.5__create_user_ddl.sql、V4.1_2__add_user_dml.sql
+ 可重复运行的SQL，则以大写的“R”开头，后面再以两个下划线分割，其后跟文件名称，最后以.sql结尾。
+ 举例：
+	比如，R__truncate_user_dml.sql
+
+2.Spring配置规则
+flyway:
+	# 启用或禁用 flyway
+	enabled: true
+	# flyway 的 clean 命令会删除指定 schema 下的所有 table, 生产务必禁掉。这个默认值是 false 理论上作为默认配置是不科学的。
+	clean-disabled: true
+	# SQL 脚本的目录,多个路径使用逗号分隔 默认值 classpath:db/migration
+	locations: classpath:db/migration
+	#  metadata 版本控制信息表 默认 flyway_schema_history
+	table: flyway_schema_history
+	# 如果没有 flyway_schema_history 这个 metadata 表， 在执行 flyway migrate 命令之前, 必须先执行 flyway baseline 命令
+	# 设置为 true 后 flyway 将在需要 baseline 的时候, 自动执行一次 baseline。
+	baseline-on-migrate: true
+	# 指定 baseline 的版本号,默认值为 1, 低于该版本号的 SQL 文件, migrate 时会被忽略
+	baseline-version: 0
+	# 字符编码 默认 UTF-8
+	encoding: UTF-8
+	# 是否允许不按顺序迁移 开发建议 true  生产建议 false
+	out-of-order: false
+	# 需要 flyway 管控的 schema list,这里我们配置为flyway  缺省的话, 使用spring.datasource.url 配置的那个 schema,
+	# 可以指定多个schema, 但仅会在第一个schema下建立 metadata 表, 也仅在第一个schema应用migration sql 脚本.
+	# 但flyway Clean 命令会依次在这些schema下都执行一遍. 所以 确保生产 spring.flyway.clean-disabled 为 true
+	# schemas: flyway
+	# 执行迁移时是否自动调用验证   当你的 版本不符合逻辑 比如 你先执行了 DML 而没有 对应的DDL 会抛出异常
+	validate-on-migrate: true
+3.命令作用及注意事项
+baseline
+对已经存在数据库Schema结构的数据库一种解决方案。实现在非空数据库新建MetaData表，并把Migrations应用到该数据库；也可以在已有表结构的数据库中实现添加Metadata表。
+clean
+清除掉对应数据库Schema中所有的对象，包括表结构，视图，存储过程等，clean操作在dev 和 test阶段很好用，但在生产环境务必禁用。
+info
+用于打印所有的Migrations的详细和状态信息，也是通过MetaData和Migrations完成的，可以快速定位当前的数据库版本。
+repair
+repair操作能够修复metaData表，该操作在metadata出现错误时很有用。
+undo
+撤销操作，社区版不支持。
+validate
+验证已经apply的Migrations是否有变更，默认开启的，原理是对比MetaData表与本地Migrations的checkNum值，如果值相同则验证通过，否则失败。
+
+4. flyway docker用法：注意5.7的mysql支持7.11.3，不支持8.0的flyway会报错提示不支持
+docker run --rm -v $PWD/sql:/flyway/sql flyway/flyway:7.11.3 -url=jdbc:mysql://172.30.199.181:3307/dc_manage?createDatabaseIfNotExist=true -user=root -password=Docimax@123 migrate
+
+5. flyway注意事项
+flyway执行migrate必须在空白的数据库上进行，否则报错；
+对于已经有数据的数据库，必须先baseline，然后才能migrate；
+clean操作是删除数据库的所有内容，包括baseline之前的内容；
+尽量不要修改已经执行过的SQL，即便是R开头的可反复执行的SQL，它们会不利于数据迁移；SQL文件已经提交之后，不得修改，否则会导致校验失败
+SQL中禁止使用DROP命令，需要加创建表时的判断：CREATE TABLE IF NOT EXIST table_name...
+尽量避免使用 Undo 模式。
+
+6.参考链接：
+http://www.arccode.net/flyway-specification.html
+https://flywaydb.org/documentation/tutorials/undo
+https://www.exoscale.com/syslog/continuous-integration-databases/    https://www.fengbaichao.cn/java%E5%90%8E%E7%AB%AF/2021/11/12/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%81%E7%A7%BB%E5%B7%A5%E5%85%B7flyway%E7%9A%84%E4%BD%BF%E7%94%A8%E4%B8%8E%E8%AF%A6%E8%A7%A3/
+https://java.isture.com/dependencies/dbmanager/version/flyway/Flyway-commandline%E4%BD%BF%E7%94%A8.html#_1-flyway%E4%B8%8B%E8%BD%BD

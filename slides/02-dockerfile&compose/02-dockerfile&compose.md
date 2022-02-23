@@ -2,17 +2,42 @@
 
 ## docker回顾
 
-- docker-01
+- [01-docker](../01-docker-base/容器.pdf)
 
+## 镜像相关操作
 
+- 为什么我们需要去制作镜像
+  - 拉取到https://hub.docker.com镜像后一定符合我们的需要吗？如何去修改呢？
+    - exec 进入容器修改，修改完成需要reload
+    - 外部挂载方式来覆盖容器内的配置
+    - 自己做镜像
+- 镜像生成方式
+  - Dockerfile
+  - 基于容器制作
 
-TODO：介绍使用Dockerfile的目的。
+![img](./dockerfile-flow.png)
 
-
+- Dockerfile介绍：
+  - Docker通过读取`Dockerfile`文件中的指令自动构建镜像。`Dcokerfile`是一个文本文件，它包含了构建镜像所需要执行的全部命令。执行`docker build`命令，Docker就会按照文档执行并最终创建一个镜像
+  - ![img](./build.png)
 
 ## dockerfile编写
 
-### 举个例子
+## 格式
+
+- Dockerfile格式：
+
+```text
+# Comment
+INSTRUCTION arguments
+```
+
+- 要求：
+  - 要有专用的工作目录
+  - 文件名首字母要大写Dockerfile文件
+  - 依赖的文件需要放到工作目录，不能是工作目录之外的目录
+
+## 例子：
 
 ```shell
 mkdir mynginx
@@ -21,8 +46,10 @@ vi Dockerfile
 FROM nginx
 RUN echo '<h1>Hi, Docker</h1>' > /usr/share/nginx/html/index.html
 docker build -t nginx:mynginx .
-docker run -it --rm -p8000:80 nginx:mynginx
+docker run -it --rm -p80:80 nginx:mynginx
 ```
+
+
 
 ### 关键字介绍
 
@@ -34,7 +61,7 @@ docker run -it --rm -p8000:80 nginx:mynginx
     - FROM <registry>[:<tag>]
       - <registry>:指定作为base image的名称
       - <tag>:base image的标签，为可选项，省略时默认为latest；
-- MAINTAINER（已废弃） 设置该镜像的作者,格式：Shaokang Li <lisk@docimax.com.cn>
+- MAINTAINER（已废弃） 设置该镜像的作者,格式：Shaokang Li \<lisk@docimax.com.cn>
 - LABLE：指定kv格式元数据<key>=<value>
 - ENV  设置环境变量，键值对
   - 用于为镜像定义所需的环境变量，并可被Dockerfile文件中位于其后的其他指令(ENV,ADD,COPY等)所调用
@@ -169,95 +196,36 @@ ENTRYPOINT ["dotnet", "GenerationCenter.dll"]
 
 
 
+## docker-compose
+
+### docker compose介绍
+
+- 随着开发者对Docker了解的深入，使用其进行分布式部署变得复杂。开发者需要在开发，测试以及生产环境中的可移植应用，这些应用需要在不同的平台提供商之间迁移，比如在不同的云平台或者私有数据中心部署，同时，应用应该是可组合的，一个应用可以分解为多个服务。 Docker公司在2014年12月发布了三款用于解决多容器分布式软件可移植部署的问题。
+- `Docker Machine`为本地，私有数据中心及公有云平台提供Docker引擎，实现从零到Docker的一键部署。
+
+- `Docker Compose`是一个编排多容器分布式部署的工具，提供命令集管理容器化应用的完整开发周期，包括服务构建，启动和停止。
+
+- `Docker Swarm为Docker`容器提供了原生的集群，它将多个Docker引擎的资源汇聚在一起，并提供Docker标准的API，使Docker可以轻松扩展到多台主机。
+
+Compose是用来编排和管理多容器应用的工具，使用它，你可以通过定义一个`YAML`文件来定义你的应用的所有服务，然后通过一条命令，你就可以创建并启动所有的服务。
+
+### 应用
+
+- 安装：https://github.com/docker/compose/releases
+
+```shell
+curl -L "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+```
+
+- 常用命令
+  - `docker-compose up -d` 用于部署一个 Compose 应用
+  - `docker-compose down` 停止并删除运行中的 Compose 应用
+  - `docker-compose up -d  <application_name>` 更新yaml文件中的单个服务
+  - `docker-compose -f <dockercompose_file> up -d` 指定非标准命名的Compose文件
 
 
-## docker-compose编写
 
-
-
-## Flyway使用规则
-
-​	Prefix 可配置，前缀标识，默认值 V 表示 Versioned, R 表示 Repeatable, U 表示 Undo
-​	Version 标识版本号, 由一个或多个数字构成, 数字之间的分隔符可用点 . 或下划线 _
-​	Separator 可配置, 用于分隔版本标识与描述信息, 默认为两个下划线 __
-​	Description 描述信息, 文字之间可以用下划线 _ 或空格 分隔
-​	Suffix 可配置, 后续标识, 默认为 .sql
-​	
-
-存放问题？
-
-​	单独放到一个项目中管理？
-
-​	各自放到自身微服务中？
-
-​	命名规范中要不要加上项目名称？
-
-	1.SQL存放位置及命名规则
-	??ProjectName要不要在命名中展示？？
-	 Java Spring boot项目需要在项目src/main/resources/下创建db/migration目录
-	 V{version}_{date}_{num}__{description}_{Author}.sql
-	 仅需要被执行一次的SQL命名以大写的"V"开头，后面跟上"0~9"数字的组合,数字之间可以用“.”或者下划线"_"分割开，然后再以两个下划线分割，其后跟文件名称，最后以.sql结尾
-	 举例：
-		V2.1.5__create_user_ddl.sql、V4.1_2__add_user_dml.sql
-	 可重复运行的SQL，则以大写的“R”开头，后面再以两个下划线分割，其后跟文件名称，最后以.sql结尾。
-	 举例：
-		比如，R__truncate_user_dml.sql
-	
-	2.Spring配置规则
-	flyway:
-		# 启用或禁用 flyway
-		enabled: true
-		# flyway 的 clean 命令会删除指定 schema 下的所有 table, 生产务必禁掉。这个默认值是 false 理论上作为默认配置是不科学的。
-		clean-disabled: true
-		# SQL 脚本的目录,多个路径使用逗号分隔 默认值 classpath:db/migration
-		locations: classpath:db/migration
-		#  metadata 版本控制信息表 默认 flyway_schema_history
-		table: flyway_schema_history
-		# 如果没有 flyway_schema_history 这个 metadata 表， 在执行 flyway migrate 命令之前, 必须先执行 flyway baseline 命令
-		# 设置为 true 后 flyway 将在需要 baseline 的时候, 自动执行一次 baseline。
-		baseline-on-migrate: true
-		# 指定 baseline 的版本号,默认值为 1, 低于该版本号的 SQL 文件, migrate 时会被忽略
-		baseline-version: 0
-		# 字符编码 默认 UTF-8
-		encoding: UTF-8
-		# 是否允许不按顺序迁移 开发建议 true  生产建议 false
-		out-of-order: false
-		# 需要 flyway 管控的 schema list,这里我们配置为flyway  缺省的话, 使用spring.datasource.url 配置的那个 schema,
-		# 可以指定多个schema, 但仅会在第一个schema下建立 metadata 表, 也仅在第一个schema应用migration sql 脚本.
-		# 但flyway Clean 命令会依次在这些schema下都执行一遍. 所以 确保生产 spring.flyway.clean-disabled 为 true
-		# schemas: flyway
-		# 执行迁移时是否自动调用验证   当你的 版本不符合逻辑 比如 你先执行了 DML 而没有 对应的DDL 会抛出异常
-		validate-on-migrate: true
-	3.命令作用及注意事项
-	baseline
-	对已经存在数据库Schema结构的数据库一种解决方案。实现在非空数据库新建MetaData表，并把Migrations应用到该数据库；也可以在已有表结构的数据库中实现添加Metadata表。
-	clean
-	清除掉对应数据库Schema中所有的对象，包括表结构，视图，存储过程等，clean操作在dev 和 test阶段很好用，但在生产环境务必禁用。
-	info
-	用于打印所有的Migrations的详细和状态信息，也是通过MetaData和Migrations完成的，可以快速定位当前的数据库版本。
-	repair
-	repair操作能够修复metaData表，该操作在metadata出现错误时很有用。
-	undo
-	撤销操作，社区版不支持。
-	validate
-	验证已经apply的Migrations是否有变更，默认开启的，原理是对比MetaData表与本地Migrations的checkNum值，如果值相同则验证通过，否则失败。
-	
-	4. flyway docker用法：注意5.7的mysql支持7.11.3，不支持8.0的flyway会报错提示不支持
-	docker run --rm -v $PWD/sql:/flyway/sql flyway/flyway:7.11.3 -url=jdbc:mysql://172.30.199.181:3307/dc_manage?createDatabaseIfNotExist=true -user=root -password=Docimax@123 migrate
-	
-	5. flyway注意事项
-	flyway执行migrate必须在空白的数据库上进行，否则报错；
-	对于已经有数据的数据库，必须先baseline，然后才能migrate；
-	clean操作是删除数据库的所有内容，包括baseline之前的内容；
-	尽量不要修改已经执行过的SQL，即便是R开头的可反复执行的SQL，它们会不利于数据迁移；SQL文件已经提交之后，不得修改，否则会导致校验失败
-	SQL中禁止使用DROP命令，需要加创建表时的判断：CREATE TABLE IF NOT EXIST table_name...
-	尽量避免使用 Undo 模式。
-	
-	6.参考链接：
-	http://www.arccode.net/flyway-specification.html
-	https://flywaydb.org/documentation/tutorials/undo
-	https://www.exoscale.com/syslog/continuous-integration-databases/    https://www.fengbaichao.cn/java%E5%90%8E%E7%AB%AF/2021/11/12/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%81%E7%A7%BB%E5%B7%A5%E5%85%B7flyway%E7%9A%84%E4%BD%BF%E7%94%A8%E4%B8%8E%E8%AF%A6%E8%A7%A3/
-	https://java.isture.com/dependencies/dbmanager/version/flyway/Flyway-commandline%E4%BD%BF%E7%94%A8.html#_1-flyway%E4%B8%8B%E8%BD%BD
 > 参考文章：
 >
 > https://zhuanlan.zhihu.com/p/79949030
