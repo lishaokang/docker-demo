@@ -4,6 +4,12 @@
 
 - [01-docker](../01-docker-base/容器.pdf)
 
+## 分享目的
+
+- 能够看懂Dockerfile各个指令的用途
+- 能够根据需求自行编写Dockerfile文件
+- 能够修改docker-compose.yml文件
+
 ## 镜像相关操作
 
 - 为什么我们需要去制作镜像
@@ -53,7 +59,7 @@ docker run -it --rm -p80:80 nginx:mynginx
 
 ### 关键字介绍
 
-- FROM 指定命令指定基于哪个镜像创建
+- FROM 命令指定基于哪个镜像创建
   - FROM指令时最重要的一个且必须为Dockerfile文件开篇的第一个非注释行，用于为镜像文件构建过程指定基准镜像，后续的指令运行在此基准镜像所提供的运行环境
   - 实践中，基准镜像可以时任何可用镜像文件，默认情况下，docker build会在docker主机上查找指定的镜像文件，在其不存在时，则会从docker hub registry上拉去所需要的镜像文件
     - 如果找不到指定的镜像文件，docker build会返回一个错误信息
@@ -129,10 +135,6 @@ docker run -it --rm -p80:80 nginx:mynginx
     - ENTRYPOINT ["<executable>", "<param1>", "<param2>"]
     - docker run 命令传入的命令参数会覆盖CMD指令的内容并且附加到ENTRYPOINT命令最后作为其参数使用
     - Dockerfile文件中也可以存在多个ENTRYPOINT指令，但是只有最后一个生效
-
-```shell
-docker build -t xxx:latest -f SC.Submitthunsoft/Dockerfile . 
-```
 
 ### 构建上下文
 
