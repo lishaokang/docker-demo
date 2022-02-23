@@ -126,6 +126,20 @@ docker run -it --rm -p80:80 nginx:mynginx
       - CMD ["param1", "param2"]
       - 前两种语法格式的意义同RUN
       - 第三种则用于为ENTRYPOINT指令提供默认参数
+    
+    ```docker
+    FROM busybox
+    LABEL maintainer="Shaokang Li <lisk@docimax.com.cn>"
+    
+    ENV WEB_DOC_ROOT="/data/web/html/"
+    
+    RUN mkdir -p $WEB_DOC_ROOT && \
+        echo "<h1>Busybox http server.</h1>" > ${WEB_DOC_ROOT}/index.html
+    CMD /bin/httpd -f -h ${WEB_DOC_ROOT}
+    CMD ["/bin/httpd", "-f", "-h ${WEB_DOC_ROOT}"]
+    ```
+    
+    
 - ENTRYPOINT 配置给容器一个可执行的命令
   - 类似于CMD命令功能，用于为容器指定默认运行程序，从而使得容器像是一个单独的可执行程序
   - 与CMD不同的是，由ENTRYPOINT启动的应用程序不会被docker run命令行指定的参数所覆盖，而且，这些命令行参数会被当做参数传递给ENTRYPOINT指定的程序
