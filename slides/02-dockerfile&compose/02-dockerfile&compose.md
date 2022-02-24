@@ -49,8 +49,10 @@ INSTRUCTION arguments
 mkdir mynginx
 cd mynginx
 vi Dockerfile
+#描述信息
 FROM nginx
 RUN echo '<h1>Hi, Docker</h1>' > /usr/share/nginx/html/index.html
+
 docker build -t nginx:mynginx .
 docker run -it --rm -p80:80 nginx:mynginx
 ```
@@ -75,7 +77,7 @@ docker run -it --rm -p80:80 nginx:mynginx
   - Syntax:
     - ENV <key> <value>或
     - ENV <key>=<value>
-    - 第一种格式中<key>之后的所有内容都会被视作<value>的组成部分，因此一次只能纸质一个变量
+    - 第一种格式中<key>之后的所有内容都会被视作<value>的组成部分，因此一次只能设置一个变量
     - 第二种格式可以用一次设置多个变量，每个变量为一个"<key>=<vaule>"的键值对，如果value中包含空格需要用转义符转移，或者用引号标识，另外反斜线也可以用作续行
     - 定义多个变量时，建议使用第二种方式，以便再同一层完成所有功能
 - VOLUME 授权访问从容器内到主机上的目录
@@ -93,7 +95,6 @@ docker run -it --rm -p80:80 nginx:mynginx
     - 如果<src>是目录，则其内部文件或者子目录会被递归复制，但<src>自身不会被复制
     - 如果指定了多个<src>，或在<src>中使用了通配符，则<dest>必须是一个目录，且必须以/结尾
     - 如果<dest>事先不存在，它将会被自动创建，这包括其父目录路径
-    - 49‘’分层概念？？TODO
     - 演示拷贝过程
   - ADD：
     - ADD类似于COPY指令，ADD支持使用TAR文件和URL路径
@@ -139,7 +140,7 @@ docker run -it --rm -p80:80 nginx:mynginx
     CMD ["/bin/httpd", "-f", "-h ${WEB_DOC_ROOT}"]
     ```
     
-    
+  
 - ENTRYPOINT 配置给容器一个可执行的命令
   - 类似于CMD命令功能，用于为容器指定默认运行程序，从而使得容器像是一个单独的可执行程序
   - 与CMD不同的是，由ENTRYPOINT启动的应用程序不会被docker run命令行指定的参数所覆盖，而且，这些命令行参数会被当做参数传递给ENTRYPOINT指定的程序
@@ -243,6 +244,8 @@ chmod +x /usr/local/bin/docker-compose
 
 
 > 参考文章：
+>
+> https://jiajially.gitbooks.io/dockerguide/content/dockerIND.html
 >
 > https://zhuanlan.zhihu.com/p/79949030
 >
